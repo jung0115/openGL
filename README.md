@@ -4,7 +4,7 @@ Study OpenGL with Computer Graphics
   
 ## 과제
 **🍓 3주차**  
-[x] 그래픽 기본요소(Graphics primitives) 그리기  
+[v] 그래픽 기본요소(Graphics primitives) 그리기  
 [x] GLUT 모델링 & 뷰포트  
   
 **🍒 4주차**  
