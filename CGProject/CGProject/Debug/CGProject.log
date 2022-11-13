@@ -1,5 +1,4 @@
 ﻿  CGProject.cpp
-C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\CGProject\CGProject.cpp(17,38): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\CGProject\CGProject.cpp(22,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
-C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\CGProject\CGProject.cpp(31,40): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\CGProject\CGProject.cpp(22,28): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
+C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\CGProject\CGProject.cpp(34,28): warning C4305: '인수': 'double'에서 'GLfloat'(으)로 잘립니다.
   CGProject.vcxproj -> C:\Users\jungi\OneDrive\바탕 화면\ComputerGraphics\CGProject\Debug\CGProject.exe
