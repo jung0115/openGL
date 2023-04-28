@@ -1,122 +1,117 @@
-﻿#include <glut.h>
-#include <gl/gl.h>
-#include <gl/glu.h>
-int Width, Height;
+﻿#include <GL/glut.h>
 
-void Init() {
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glMatrixMode(GL_PROJECTION);
+#define WIDTH 3
+#define HEIGHT 3
 
-    glLoadIdentity();
-    // 기본 투상 방법을 평행 투상으로 설정.
-    // 물체 크기의 2배 정도의 가시 부피가 설정됨.
-    // 윈도우 크기에 의한 왜곡 방지 - 평행 투상
-    GLdouble WidthFactor = (GLdouble)Width / 500.0;
-    GLdouble HeightFactor = (GLdouble)Height / 500.0;
-    glOrtho(-2.0 * WidthFactor, 2.0 * WidthFactor, -2.0 * HeightFactor, 2.0 * HeightFactor, 0.5, 5.0);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+GLubyte MyTexture[WIDTH][HEIGHT][3]; // 2차원 텍스처 영상을 위한 배열
+
+GLfloat mat_diffuse[] = { 0.25, 0.25, 1., 0. };   // 확산 반사
+GLfloat mat_specular[] = { 1., 1., 1., 0. };      // 경면 반사
+GLfloat light_position[] = { 10., 10., 20., 1. }; // 광원의 위치
+
+GLfloat MyPlane111[] = { 1.5, 1.5, 1.5, 0.0 };  // 기준 평면
+GLfloat MyPlane100[] = { 1.5, 0.0, 0.0, 0.0 };  // 기준 평면
+GLfloat Rx = 0.0, Ry = 0.0, Rz = 0.0;           // 회전축
+
+// 코드 11-2 체크무늬 텍스처
+void FillMyTextureCheck() {
+	int s, t;
+	for (s = 0; s < WIDTH; s++) {
+		for (t = 0; t < HEIGHT; t++) {
+			GLubyte intensity = ((s + t) % 2) * 255;
+			MyTexture[s][t][0] = intensity;
+			MyTexture[s][t][1] = intensity;
+			MyTexture[s][t][2] = intensity;
+		}
+	}
 }
 
-void DrawScene() {
-    glColor3f(0.7, 0.7, 0.7);
-    glPushMatrix();
-        glTranslatef(0.0, -1.0, 0.0);
-        // 가로 세로 크기가 4인 회색 사각형을 그림
-        glBegin(GL_QUADS);
-            glVertex3f(2.0, 0.0, 2.0);
-            glVertex3f(2.0, 0.0, -2.0);
-            glVertex3f(-2.0, 0.0, -2.0);
-            glVertex3f(-2.0, 0.0, 2.0);
-        glEnd();
-    glPopMatrix();
+void MyInit() {
+	// 조명과 음영 설정
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);    // 조명 (물체의 특성)
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, 25.0);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);  // 조명의 위치
 
-    glColor3f(0.3, 0.3, 0.7);
-    glPushMatrix();
-        // 3차원 좌표 0.0, 0.0, -0.5에 WireTeaPot 생성
-        glTranslatef(0.0, 0.0, -0.5);
-        glutWireTeapot(1.0);
-    glPopMatrix();
-}
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_DEPTH_TEST);  // 은면 제거
+	glShadeModel(GL_SMOOTH);  // 구로 쉐이딩
 
-void MyDisplay() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(1.0, 1.0, 1.0);
+	FillMyTextureCheck(); // 텍스처로 사용할 영상 만들기(텍스처 영상)
 
-    // 좌하단 뷰 포트
-    glViewport(0, 0, Width / 2, Height / 2);
-    glPushMatrix();
-        // 카메라 위치: 0.0, 0.0, 1.0
-        // 카메라 방향(초점): 0.0, 0.0, 0.0
-        // 상향 벡터: 0.0, 1.0, 0.0
-        // => +z축에서 바라본 측면도가 그려짐
-        gluLookAt(0.0, 0.0, 1.0,  0.0, 0.0, 0.0,  0.0, 1.0, 0.0);
-        DrawScene();
-    glPopMatrix();
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB,
+		GL_UNSIGNED_BYTE, &MyTexture[0][0][0]);
 
-    // 우하단 뷰 포트
-    glViewport(Width / 2, 0, Width / 2, Height / 2);
-    glPushMatrix();
-        // 카메라 위치: 1.0, 0.0, 0.0
-        // 카메라 방향(초점): 0.0, 0.0, 0.0
-        // 상향 벡터: 0.0, 1.0, 0.0
-        // => +x축에서 바라본 측면도가 그려짐
-        gluLookAt(1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 1.0, 0.0);
-        DrawScene();
-    glPopMatrix();
+	// 텍스처 파라미터 설정(p.606)
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    // 좌상단 뷰 포트
-    glViewport(0, Height / 2, Width / 2, Height / 2);
-    glPushMatrix();
-        // 카메라 위치: 0.0, 1.0, 0.0
-        // 카메라 방향(초점): 0.0, 0.0, 0.0
-        // 상향 벡터: 0.0, 0.0, -1.0
-        // => +y축에서 내려다본 측면도가 그려짐
-        gluLookAt(0.0, 1.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0);
-        DrawScene();
-    glPopMatrix();
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+	glEnable(GL_TEXTURE_2D); // 텍스처 활성화
 
-    // 우상단 뷰 포트
-    glViewport(Width / 2, Height / 2, Width / 2, Height / 2);
-    // 행렬 모드를 투상 행렬로 => 원근 투상을 적용하기 위해
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-        // 현 투상행렬을 항등행렬로 초기화
-        glLoadIdentity();
-        // 원근 투상의 가시 부피 설정
-        // 시야각: 30도, 종횡비: (GLdouble)Width / (GLdouble)Height, 전방 절단면: 3.0, 후방 절단면: 50
-        // 윈도우 크기에 의한 왜곡을 방지하기 위해 종횡비를 윈도우 크기에 따라 변화 - 원근 투상
-        gluPerspective(30, (GLdouble)Width / (GLdouble)Height, 3.0, 50.0);
-        // 행렬 모드를 모델 뷰 행렬로 => 시점 좌표계는 모델 뷰 행렬에 반영되므로
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-            // 카메라 위치: 5.0, 5.0, 5.0
-            // 카메라 방향(초점): 0.0, 0.0, 0.0
-            // 상향 벡터: 0.0, 1.0, 0.0
-            gluLookAt(5.0, 5.0, 5.0,  0.0, 0.0, 0.0,  0.0, 1.0, 0.0);
-            DrawScene();
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    
-    glFlush();
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+	//glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_S, GL_OBJECT_PLANE, MyPlane111); // 기준평면
+	//glTexGenfv(GL_S, GL_OBJECT_PLANE, MyPlane100);
+
+	//glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+	//glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	//glTexGenfv(GL_T, GL_OBJECT_PLANE, MyPlane111);
+	//glTexGenfv(GL_T, GL_OBJECT_PLANE, MyPlane100);
+
+	glEnable(GL_TEXTURE_GEN_S);
+	//glEnable(GL_TEXTURE_GEN_T);
 }
 
 void MyReshape(int w, int h) {
-    Width = w;   Height = h;
-    Init();
-    glutPostRedisplay();
+	glViewport(0, 0, w, h);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluPerspective(40., (GLfloat)w / (GLfloat)h, 1., 10.);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	gluLookAt(0., 0., 5., 0., 0., 0., 0., 1., 0.);
+	glTranslatef(0., 0., -1);  // 원구를 뒤쪽으로 이동
 }
 
-int main() {
-    Width = 500; Height = 500;
-    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
-    glutInitWindowSize(Width, Height);
-    glutInitWindowPosition(0, 0);
-    glutCreateWindow("OpenGL Sample Drawing");
-    Init();
-    glutDisplayFunc(MyDisplay);
-    glutReshapeFunc(MyReshape);
-    glutMainLoop();
-    return 0;
+void DoKeyboard(unsigned char key, int x, int y) {
+	switch (key)
+	{
+		case '1': Rx += 1; break;
+		case '2': Ry += 1; break;
+		case '3': Rz += 1; break;
+		case 'i': Rx = Ry = Rz = 0;; break;   // 초기 위치
+	}
+
+	glutPostRedisplay();
 }
+
+void MyDisplay() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glPushMatrix();
+		glRotatef(Rx, 1.0, 0.0, 0.0);
+		glRotatef(Ry, 0.0, 1.0, 0.0);
+		glRotatef(Rz, 0.0, 0.0, 1.0);
+		glutSolidSphere(1.5, 50, 50);
+	glPopMatrix();
+
+	glutSwapBuffers();
+}
+
+int main()
+{
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+
+	glutCreateWindow("2D Texture to Shpere");
+	glutKeyboardFunc(DoKeyboard);
+	glutReshapeFunc(MyReshape);
+	glutDisplayFunc(MyDisplay);
+	MyInit();
+	glutMainLoop();
+	return 0;
+}
+
